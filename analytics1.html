@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ad Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/index.js"></script>
+</head>
+
+
+<div class="header" id="header"></div>
+    <script>
+                fetch('header.html')
+          .then(r => r.text())
+          .then(h => document.getElementById('header').innerHTML = h);
+
+        fetchAds();
+    </script>
+
+<div class="bg-gray-100 flex flex-col items-center p-5">
+
+    
+    <h2 class="text-2xl font-bold mb-4">Your Ad Analytics</h2>
+    <div id="ads-container" class="grid gap-4 w-full max-w-2xl"></div>
+
+    <script>
+        const username = localStorage.getItem("username");
+
+        async function fetchUserAds() {
+            const res = await fetch(`http://localhost:5000/user-ads/${username}`);
+            const ads = await res.json();
+            const adsContainer = document.getElementById("ads-container");
+
+            adsContainer.innerHTML = ads.map(ad => `
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold">${ad.title}</h3>
+                    <p class="text-sm text-gray-600">Likes: ${ad.likes} | Clicks: ${ad.clicks || 0}</p>
+                </div>
+            `).join("");
+        }
+
+        fetchUserAds();
+    </script>
+<div/>
+</html>
+

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ads Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Auth Check Script - Runs immediately -->
+    <script>
+        // Check if user is logged in
+        function checkAuth() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "index.html";
+            }
+            return token;
+        }
+        
+        // Run auth check immediately when page loads
+        const token = checkAuth();
+    </script>
+
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <div class="max-w-6xl mx-auto p-4">
+            <div class="flex justify-between items-center">
+                <!-- Logo and Site Name -->
+                <a href="home.html" class="text-xl font-bold text-blue-600 flex items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-ad text-blue-600 text-2xl"></i>
+                    <span class="font-bold text-xl text-gray-800">AdsPlatform</span>
+                </div></a>
+                
+           
+                
+                <!-- User Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- <button onclick="window.location.href='post.html'" class=" md:block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        Post Ad
+                    </button> -->
+                    
+                    <!-- <div class="relative">
+                        <div class="flex items-center space-x-1 text-gray-700 hover:text-blue-600">
+                            <i class="fas fa-user-circle text-xl"></i>
+                            <span id="username-display" class="hidden md:inline">Account</span>
+                        </div>
+                    </div> -->
+                    
+                    <button onclick="handleLogout()" class="text-gray-600 hover:text-red-600 transition" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="hidden md:inline ml-1">Logout</span>
+                    </button>
+                    
+   
+                </div>
+            </div>
+            
+ 
+        </div>
+    </header>
+
+    <!-- Search Bar Section -->
+    <div class="bg-blue-50 py-4">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row gap-3">
+                <input type="text" id="searchInput" placeholder="Search ads..." class="flex-grow p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="searchAds()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-search mr-2"></i>Search
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mb-16 mx-auto p-5">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Ads List</h2>
+            <div class="flex space-x-2">
+                <button onclick="fetchAds()" class="flex items-center text-gray-600 hover:text-blue-600 transition">
+                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <div id="ads-container" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Loading indicator -->
+            <div id="loading-indicator" class="col-span-full text-center p-10">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p class="text-gray-500">Loading ads...</p>
+            </div>
+            <!-- Ads will be inserted here by script -->
+        </div>
+
+    </div>
+
+    <div   id="footer"></div>
+    <script>
+                fetch('footer.html')
+          .then(r => r.text())
+          .then(h => document.getElementById('footer').innerHTML = h);
+
+        fetchAds();
+    </script>
+
+    <script>
+        // Get user data from localStorage
+        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+        
+        // Update username display if available
+        if (userData.username) {
+            document.getElementById("username-display").textContent = userData.username;
+        }
+        
+        // Handle logout
+        function handleLogout() {
+            swal({
+                title: "Log out?",
+                text: "Are you sure you want to log out?",
+                icon: "warning",
+                buttons: ["Cancel", "Log out"],
+                dangerMode: true,
+            }).then((willLogout) => {
+                if (willLogout) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+                    window.location.href = "index.html";
+                }
+            });
+        }
+        
+ 
+        
+        // Function to search ads
+        function searchAds() {
+            const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+            fetchAds(searchTerm);
+        }
+        
+        // Enter key for search
+        document.getElementById("searchInput").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                searchAds();
+            }
+        });
+        
+        // Fetch and display ads with optional search filter
+        async function fetchAds(searchTerm = "") {
+            try {
+                // Show loading indicator
+                document.getElementById("loading-indicator").classList.remove("hidden");
+                
+                // Check auth before making API request
+                if (!checkAuth()) return;
+                
+                const res = await fetch("http://localhost:5000/ads", {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        // Token expired or invalid
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user");
+                        window.location.href = "index.html";
+                        return;
+                    }
+                    throw new Error("Failed to fetch ads");
+                }
+                
+                const ads = await res.json();
+                const adsContainer = document.getElementById("ads-container");
+                
+                // Filter ads if search term provided
+                const filteredAds = searchTerm 
+                    ? ads.filter(ad => 
+                        ad.title.toLowerCase().includes(searchTerm) || 
+                        (ad.uploader && ad.uploader.toLowerCase().includes(searchTerm)))
+                    : ads;
+                
+                // Hide loading indicator
+                document.getElementById("loading-indicator").classList.add("hidden");
+                
+                // Clear previous content except the loading indicator
+                adsContainer.innerHTML = `
+                    <div id="loading-indicator" class="col-span-full text-center p-10 hidden">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                        <p class="text-gray-500">Loading ads...</p>
+                    </div>
+                `;
+                
+                if (filteredAds.length === 0) {
+                    adsContainer.innerHTML += `
+                        <div class="col-span-full text-center p-8 bg-gray-50 rounded-lg">
+                            <i class="fas fa-search text-gray-400 text-4xl mb-3"></i>
+                            <p class="text-gray-500">No ads found${searchTerm ? " matching '" + searchTerm + "'" : ""}.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                filteredAds.forEach(ad => {
+    const adCard = document.createElement('div');
+    adCard.className = "bg-white p-4 rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer";
+
+    // Function to handle ad clicks
+    adCard.onclick = async () => {
+        try {
+            // Send a request to update the click count
+            await fetch("http://localhost:5000/click-ad", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ adId: ad._id })
+            });
+
+            // Redirect to the details page after updating clicks
+            window.location.href = `ad-details.html?id=${ad._id}`;
+        } catch (error) {
+            console.error("Error updating ad clicks:", error);
+        }
+    };
+
+    adCard.innerHTML = `
+        <div class="relative">
+            <img src="http://localhost:5000${ad.image}" class="w-full h-40 object-cover rounded-lg" alt="${ad.title}">
+            <span class="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs">
+                <i class="fas fa-eye mr-1"></i>${ad.clicks || 0}
+            </span>
+        </div>
+        <h3 class="font-bold text-lg mt-3 truncate">${ad.title}</h3>
+        <p class="text-sm text-gray-600 flex items-center">
+            <i class="fas fa-user mr-1 text-gray-400"></i> ${ad.uploader || 'Anonymous'}
+        </p>
+        <div class="flex justify-between items-center mt-3">
+            <button onclick="event.stopPropagation(); likeAd('${ad._id}')" class="flex items-center text-gray-600 hover:text-blue-600 transition">
+                <i class="fas fa-thumbs-up mr-1"></i> ${ad.likes || 0}
+            </button>
+        </div>
+    `;
+
+    adsContainer.appendChild(adCard);
+});
+
+            } catch (error) {
+                console.error("Error fetching ads:", error);
+                // Hide loading indicator and show error
+                document.getElementById("loading-indicator").classList.add("hidden");
+                swal("Error", "Failed to load ads. Please try again later.", "error");
+            }
+        }
+
+        async function viewAd(adId) {
+            try {
+                await fetch("http://localhost:5000/click-ad", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ adId }),
+                });
+                window.location.href = `ad-details.html?id=${adId}`;
+            } catch (error) {
+                console.error("Error recording ad view:", error);
+            }
+        }
+
+        async function likeAd(adId) {
+            try {
+                const res = await fetch("http://localhost:5000/like-ad", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ adId }),
+                });
+                
+                if (!res.ok) {
+                    throw new Error("Failed to like ad");
+                }
+                
+                // Refresh ads after liking
+                fetchAds(document.getElementById("searchInput").value.toLowerCase());
+            } catch (error) {
+                console.error("Error liking ad:", error);
+                swal("Error", "Failed to like ad. Please try again.", "error");
+            }
+        }
+
+        // Initialize
+        fetchAds();
+    </script>
+</body>
+</html>

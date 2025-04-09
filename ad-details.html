@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ad Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="loading" class="fixed inset-0 flex items-center justify-center bg-white z-50">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+
+    <div id="auth-content" class="hidden">
+
+    <!-- Header -->
+    <div class="header" id="header"></div>
+    <script>
+        fetch('header.html')
+            .then(r => r.text())
+            .then(h => document.getElementById('header').innerHTML = h);
+    </script>
+        <main class="container mx-auto px-4 py-8">
+            <div class="max-w-2xl mx-auto">
+                <a href="home.html" class="inline-block mb-4 text-blue-500 hover:text-blue-700">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to ads
+                </a>
+
+                <div id="ad-details" class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <!-- Content will be inserted here by JavaScript -->
+                </div>
+            </div>
+
+
+            <div class="footer" id="footer"></div>
+            <script>
+                fetch('footer.html')
+                    .then(r => r.text())
+                    .then(h => document.getElementById('footer').innerHTML = h);
+            </script>
+        </main>
+
+    <!-- Header -->
+
+    </div>
+
+    <script>
+    // Check authentication on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        checkAuth();
+    });
+
+    // Authentication check function
+    function checkAuth() {
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            // Redirect to login page if no token exists
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        // If token exists, show content and fetch ad details
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('auth-content').classList.remove('hidden');
+        fetchAdDetails();
+    }
+
+    // Logout function
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.href = 'index.html';
+    });
+
+    // Fetch and display ad details
+    async function fetchAdDetails() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const adId = urlParams.get("id");
+            
+            if (!adId) {
+                showError("No ad ID specified");
+                return;
+            }
+
+            const res = await fetch("http://localhost:5000/ads");
+            const ads = await res.json();
+            const ad = ads.find(a => a._id === adId);
+        
+            if (ad) {
+                document.getElementById("ad-details").innerHTML = `
+                    <div class="relative">
+                        <img src="http://localhost:5000${ad.image}" 
+                            class="w-full h-64 sm:h-80 object-cover" 
+                            alt="${ad.title}">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                            <h2 class="text-white text-2xl font-bold">${ad.title}</h2>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <p class="text-sm text-gray-600">
+                                <i class="fas fa-user mr-1"></i> ${ad.uploader}
+                            </p>
+                            <div class="flex space-x-4 text-sm">
+                                <span class="flex items-center">
+                                    <i class="fas fa-heart text-red-500 mr-1"></i> ${ad.likes || 0}
+                                </span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-mouse-pointer text-blue-500 mr-1"></i> ${ad.clicks || 0}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-100 pt-4">
+                            <h3 class="text-lg font-semibold mb-2">Description</h3>
+                            <p class="text-gray-700 whitespace-pre-line">${ad.description}</p>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-end">
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition duration-200">
+                                <i class="fas fa-external-link-alt mr-1"></i> Visit Ad
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                showError("Ad not found");
+            }
+        } catch (error) {
+            showError("Failed to load ad details");
+            console.error(error);
+        }
+    }
+
+    function showError(message) {
+        document.getElementById("ad-details").innerHTML = `
+            <div class="p-6 text-center">
+                <div class="text-red-500 text-xl mb-2">
+                    <i class="fas fa-exclamation-circle text-4xl mb-3"></i>
+                    <p>${message}</p>
+                </div>
+                <p class="text-gray-600 mt-2">Please try again later or contact support.</p>
+            </div>
+        `;
+    }
+    </script>
+</body>
+</html>

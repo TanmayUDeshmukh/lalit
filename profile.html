@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile | Ad Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="home.html" class="text-xl font-bold text-blue-600 flex items-center">
+                <i class="fas fa-bullhorn mr-2"></i>
+                AdNetwork
+            </a>
+            
+            <div class="flex items-center space-x-4">
+ 
+                <div id="navAuth" class="flex items-center">
+                    <!-- Auth buttons will be inserted here by checkAuth() -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Auth Message -->
+        <div id="authMessage" class="text-center py-10"></div>
+        
+        <!-- Profile Content - Only visible when logged in -->
+        <div id="profileContainer" class="hidden">
+            <!-- Profile Header -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-32"></div>
+                <div class="px-6 py-4 relative">
+                    <div class="absolute -top-12 left-6">
+                        <div class="h-24 w-24 rounded-full bg-white p-1 shadow-lg">
+                            <div class="h-full w-full rounded-full bg-gray-200 flex items-center justify-center">
+                                <i class="fas fa-user text-4xl text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ml-28">
+                        <h2 id="profile-username" class="text-2xl font-bold"></h2>
+                        <p id="profile-email" class="text-gray-600"></p>
+                    </div>
+            
+                </div>
+            </div>
+            
+            <!-- Profile Tabs -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex">
+   
+                        <button id="tab-account" class="tab-button text-gray-500 hover:text-gray-700 whitespace-nowrap py-4 px-6 border-b-2 border-transparent font-medium">
+                            <i class="fas fa-cog mr-1"></i> Account Settings
+                        </button>
+                    </nav>
+                </div>
+                
+       
+                
+                <div id="tab-content-account" class="tab-content p-6 hidden">
+                    <form id="update-profile-form" class="space-y-4">
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <input type="text" id="username" name="username" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="email" name="email" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="current-password" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                            <input type="password" id="current-password" name="current-password" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="new-password" class="block text-sm font-medium text-gray-700 mb-1">New Password (leave blank if unchanged)</label>
+                            <input type="password" id="new-password" name="new-password" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition">
+                                <i class="fas fa-save mr-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-8 pt-6 border-t border-gray-200">
+                        <h3 class="text-lg font-medium">Danger Zone</h3>
+                        <p class="text-gray-600 text-sm mb-4">Actions here cannot be undone</p>
+                        <button id="delete-account-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-trash-alt mr-1"></i> Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+ 
+    <script>
+        // Auth state management
+        let token = localStorage.getItem("token");
+        let userData = {};
+        
+        function checkAuth() {
+            token = localStorage.getItem("token");
+            
+            if (!token) {
+                // Redirect to login page if no token exists
+                window.location.href = 'index.html';
+                return false;
+            }
+            
+            try {
+                // Parse user data from localStorage
+                userData = JSON.parse(localStorage.getItem("user") || "{}");
+                
+                // Update nav auth buttons
+                const navAuth = document.getElementById("navAuth");
+                navAuth.innerHTML = `
+                    <span class="mr-3 text-gray-600">Welcome, ${userData.username || 'User'}</span>
+                    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                    </button>
+                `;
+                document.getElementById("logoutBtn").addEventListener("click", handleLogout);
+                
+                // Show profile container and hide auth message
+                document.getElementById("profileContainer").classList.remove("hidden");
+                document.getElementById("authMessage").innerHTML = "";
+                
+                // Update profile data
+                updateProfileData();
+                
+                return true;
+            } catch (error) {
+                console.error("Error parsing user data:", error);
+                return false;
+            }
+        }
+        
+        function handleLogout() {
+            swal({
+                title: "Log out?",
+                text: "Are you sure you want to log out?",
+                icon: "warning",
+                buttons: ["Cancel", "Log out"],
+                dangerMode: true,
+            }).then((willLogout) => {
+                if (willLogout) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+                    window.location.href = "index.html";
+                }
+            });
+        }
+        
+        function updateProfileData() {
+            // Update profile username and email
+            document.getElementById("profile-username").textContent = userData.username || 'User';
+            document.getElementById("profile-email").textContent = userData.email || 'No email available';
+            
+            // Populate form fields
+            document.getElementById("username").value = userData.username || '';
+            document.getElementById("email").value = userData.email || '';
+            
+            // Fetch user stats
+            fetchUserStats();
+        }
+ 
+ 
+ 
+ 
+        // Tab switching
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('border-blue-500', 'text-blue-600');
+                    btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700');
+                });
+                
+                // Add active class to clicked button
+                button.classList.add('border-blue-500', 'text-blue-600');
+                button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700');
+                
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Show corresponding tab content
+                const tabId = button.id.replace('tab-', 'tab-content-');
+                document.getElementById(tabId).classList.remove('hidden');
+            });
+        });
+
+        // Update profile form handling
+        document.getElementById('update-profile-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                currentPassword: document.getElementById('current-password').value,
+                newPassword: document.getElementById('new-password').value
+            };
+            
+            // In a real app, this would be an API call
+            // For demo, we'll simulate success
+            swal("Success", "Profile updated successfully", "success")
+            .then(() => {
+                // Update local storage with new data
+                const updatedUserData = {
+                    ...userData,
+                    username: formData.username,
+                    email: formData.email
+                };
+                localStorage.setItem("user", JSON.stringify(updatedUserData));
+                userData = updatedUserData;
+                
+                // Clear password fields
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                
+                // Update UI
+                updateProfileData();
+            });
+        });
+
+        // Delete account button
+        document.getElementById('delete-account-btn').addEventListener('click', function() {
+            swal({
+                title: "Delete Account?",
+                text: "This will permanently delete your account and all your data. This action cannot be undone!",
+                icon: "warning",
+                buttons: ["Cancel", "Delete My Account"],
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    // In a real app, this would be an API call
+                    // For demo, we'll just redirect to login
+                    swal("Account Deleted", "Your account has been permanently deleted", "success")
+                    .then(() => {
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user");
+                        window.location.href = "index.html";
+                    });
+                }
+            });
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+        });
+    </script>
+</body>
+</html>

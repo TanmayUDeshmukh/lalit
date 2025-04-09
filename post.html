@@ -1,0 +1,424 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ads Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/index.js"></script>
+</head>
+<body class="bg-gray-100 flex flex-col items-center p-5">
+
+    
+
+ 
+
+    <div class="header" id="header"></div>
+    <script>
+                fetch('header.html')
+          .then(r => r.text())
+          .then(h => document.getElementById('header').innerHTML = h);
+
+        fetchAds();
+    </script>
+ 
+
+    <form id="postAdForm" class="bg-white p-6 rounded-lg shadow-lg">
+        <input type="text" id="title" placeholder="Ad Title" class="border p-2 w-full mb-2" required>
+        <textarea id="description" placeholder="Ad Description" class="border p-2 w-full mb-2" required></textarea>
+        <input type="file" id="image" class="border p-2 w-full mb-2" required>
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Post Ad</button>
+    </form>
+
+    
+    <h2 class="text-xl font-bold mb-4">Ads List</h2>
+    <div id="ads-container" class="grid gap-4 w-full max-w-2xl"></div>
+
+    <script>
+        document.getElementById("postAdForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append("title", document.getElementById("title").value);
+            formData.append("description", document.getElementById("description").value);
+            formData.append("image", document.getElementById("image").files[0]);
+            formData.append("uploader", localStorage.getItem("username"));
+        
+            await fetch("http://localhost:5000/create-ad", { method: "POST", body: formData });
+            alert("Ad Posted!");
+            window.location.reload();
+        });
+        </script>
+
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ads Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-bullhorn text-blue-500 text-2xl"></i>
+            <h1 class="text-xl font-bold text-gray-800">AdSpace</h1>
+        </div>
+        <div class="flex items-center" id="navAuth">
+            <!-- Auth buttons will be inserted here by script -->
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6">
+        <div class="mb-8" id="authMessage"></div>
+        
+        <!-- Post Ad Form - Hidden by default -->
+        <div id="adFormContainer" class="hidden mb-10">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Post a New Ad</h2>
+            <form id="postAdForm" class="bg-white p-6 rounded-lg shadow-md">
+                <div class="space-y-4">
+                    <div>
+                        <label for="title" class="block text-gray-700 font-medium mb-1">Ad Title</label>
+                        <input type="text" id="title" placeholder="Enter a compelling title" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    
+                    <div>
+                        <label for="description" class="block text-gray-700 font-medium mb-1">Description</label>
+                        <textarea id="description" placeholder="Describe your product or service" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px]" required></textarea>
+                    </div>
+                    
+                    <div>
+                        <label for="image" class="block text-gray-700 font-medium mb-1">Upload Image</label>
+                        <div class="border-dashed border-2 border-gray-300 rounded-md px-6 py-8 text-center cursor-pointer" id="dropzone">
+                            <input type="file" id="image" class="hidden" accept="image/*" required>
+                            <i class="fas fa-cloud-upload-alt text-gray-400 text-3xl mb-2"></i>
+                            <p class="text-sm text-gray-500">Click to upload or drag and drop</p>
+                            <p class="text-xs text-gray-400 mt-1">PNG, JPG or GIF up to 5MB</p>
+                        </div>
+                        <div id="previewContainer" class="mt-2 hidden">
+                            <img id="imagePreview" class="h-32 object-cover rounded" alt="Preview">
+                            <button type="button" id="removeImage" class="text-red-500 text-sm mt-1">Remove</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md flex items-center transition-colors">
+                            <i class="fas fa-plus-circle mr-2"></i>
+                            Post Ad
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Login Form - Hidden by default -->
+        <div id="loginContainer" class="hidden">
+            <div class="bg-white p-6 rounded-lg shadow-md max-w-md mx-auto">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Login</h2>
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="username" class="block text-gray-700 font-medium mb-1">Username</label>
+                        <input type="text" id="username" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-gray-700 font-medium mb-1">Password</label>
+                        <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition-colors">
+                        Sign In
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-10">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Available Ads</h2>
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Search ads..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <div id="ads-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Ads will be inserted here by script -->
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-6 mt-10">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-bullhorn text-blue-400 text-xl"></i>
+                        <span class="text-lg font-bold">AdSpace</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mt-1">Your go-to platform for classifieds</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+            <div class="mt-6 text-center text-sm text-gray-400">
+                &copy; 2025 AdSpace. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Auth state management
+        function checkAuth() {
+            const token = localStorage.getItem("token");
+            const username = localStorage.getItem("username");
+            const isLoggedIn = token && username;
+            
+            // Update nav auth buttons
+            const navAuth = document.getElementById("navAuth");
+            if (isLoggedIn) {
+                navAuth.innerHTML = `
+                    <span class="mr-3 text-gray-600">Welcome, ${username}</span>
+                    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors">
+                        Logout
+                    </button>
+                `;
+                document.getElementById("logoutBtn").addEventListener("click", logout);
+            } else {
+                navAuth.innerHTML = `
+                    <button id="showLoginBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors">
+                        Login
+                    </button>
+                `;
+                document.getElementById("showLoginBtn").addEventListener("click", () => {
+                    document.getElementById("loginContainer").classList.remove("hidden");
+                });
+            }
+            
+            // Control form visibility based on auth state
+            const adFormContainer = document.getElementById("adFormContainer");
+            const authMessage = document.getElementById("authMessage");
+            
+            if (isLoggedIn) {
+                adFormContainer.classList.remove("hidden");
+                authMessage.innerHTML = "";
+            } else {
+                adFormContainer.classList.add("hidden");
+                authMessage.innerHTML = `
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-circle text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-yellow-700">
+                                    You need to login to post ads. Please <button id="loginPromptBtn" class="text-blue-600 font-medium">login</button> to continue.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById("loginPromptBtn").addEventListener("click", () => {
+                    document.getElementById("loginContainer").classList.remove("hidden");
+                });
+            }
+            
+            return isLoggedIn;
+        }
+        
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            document.getElementById("loginContainer").classList.add("hidden");
+            checkAuth();
+            alert("You have been logged out successfully");
+        }
+        
+        // Handle login form submission
+        document.getElementById("loginForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            
+            try {
+                // This is a placeholder - in a real application, you would send a request to your server
+                // For demo purposes, we're just setting mock values
+                localStorage.setItem("token", "sample-auth-token-" + Date.now());
+                localStorage.setItem("username", username);
+                
+                document.getElementById("loginContainer").classList.add("hidden");
+                checkAuth();
+                alert("Login successful!");
+            } catch (error) {
+                alert("Login failed: " + error.message);
+            }
+        });
+        
+        // Handle image upload preview
+        const imageInput = document.getElementById("image");
+        const dropzone = document.getElementById("dropzone");
+        const previewContainer = document.getElementById("previewContainer");
+        const imagePreview = document.getElementById("imagePreview");
+        const removeImageBtn = document.getElementById("removeImage");
+        
+        dropzone.addEventListener("click", () => {
+            imageInput.click();
+        });
+        
+        dropzone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropzone.classList.add("border-blue-500");
+        });
+        
+        dropzone.addEventListener("dragleave", () => {
+            dropzone.classList.remove("border-blue-500");
+        });
+        
+        dropzone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropzone.classList.remove("border-blue-500");
+            
+            if (e.dataTransfer.files.length) {
+                imageInput.files = e.dataTransfer.files;
+                updateImagePreview();
+            }
+        });
+        
+        imageInput.addEventListener("change", updateImagePreview);
+        
+        function updateImagePreview() {
+            if (imageInput.files && imageInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    previewContainer.classList.remove("hidden");
+                    dropzone.classList.add("hidden");
+                };
+                reader.readAsDataURL(imageInput.files[0]);
+            }
+        }
+        
+        removeImageBtn.addEventListener("click", () => {
+            imageInput.value = "";
+            previewContainer.classList.add("hidden");
+            dropzone.classList.remove("hidden");
+        });
+        
+        // Handle ad form submission
+        document.getElementById("postAdForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            
+            if (!checkAuth()) {
+                alert("You must be logged in to post an ad");
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append("title", document.getElementById("title").value);
+            formData.append("description", document.getElementById("description").value);
+            formData.append("image", document.getElementById("image").files[0]);
+            formData.append("uploader", localStorage.getItem("username"));
+            formData.append("token", localStorage.getItem("token"));
+            
+            try {
+                await fetch("http://localhost:5000/create-ad", { 
+                    method: "POST", 
+                    body: formData 
+                });
+                
+                // Reset form
+                document.getElementById("postAdForm").reset();
+                previewContainer.classList.add("hidden");
+                dropzone.classList.remove("hidden");
+                
+                alert("Ad Posted Successfully!");
+                fetchAds();
+            } catch (error) {
+                alert("Failed to post ad: " + error.message);
+            }
+        });
+        
+        // Fetch and display ads
+        async function fetchAds() {
+            try {
+                const response = await fetch("http://localhost:5000/ads");
+                const ads = await response.json();
+                
+                const adsContainer = document.getElementById("ads-container");
+                adsContainer.innerHTML = "";
+                
+                if (ads.length === 0) {
+                    adsContainer.innerHTML = `
+                        <div class="col-span-full text-center p-10">
+                            <i class="far fa-sad-tear text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-500">No ads available at the moment.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                ads.forEach(ad => {
+                    const adCard = document.createElement("div");
+                    adCard.className = "bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow";
+                    adCard.innerHTML = `
+                        <div class="relative">
+                            <img src="${ad.image}" alt="${ad.title}" class="w-full h-48 object-cover">
+                            <div class="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-2 py-1 m-2 rounded">
+                                NEW
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-lg font-bold text-gray-800 mb-1">${ad.title}</h3>
+                            <p class="text-gray-600 text-sm mb-3">${ad.description}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-500 text-xs">Posted by: ${ad.uploader}</span>
+                                <button class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-medium hover:bg-blue-200 transition-colors">
+                                    Contact
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    adsContainer.appendChild(adCard);
+                });
+            } catch (error) {
+                console.error("Error fetching ads:", error);
+                document.getElementById("ads-container").innerHTML = `
+                    <div class="col-span-full text-center p-10">
+                        <i class="fas fa-exclamation-circle text-4xl text-red-400 mb-3"></i>
+                        <p class="text-gray-500">Failed to load ads. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Search functionality
+        document.getElementById("searchInput").addEventListener("input", function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const adCards = document.querySelectorAll("#ads-container > div");
+            
+            adCards.forEach(card => {
+                const title = card.querySelector("h3").textContent.toLowerCase();
+                const description = card.querySelector("p").textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+        
+        // Initialize the app
+        document.addEventListener("DOMContentLoaded", () => {
+            checkAuth();
+            fetchAds();
+        });
+    </script>
+</body>
+</html>

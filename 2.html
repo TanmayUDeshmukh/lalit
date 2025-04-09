@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ad Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            transition: transform 0.2s ease-in-out;
+        }
+        .stats-card {
+            transition: all 0.3s ease;
+        }
+        .stats-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Auth Check Script -->
+    <script>
+        function checkAuth() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "index.html";
+                return null;
+            }
+            return token;
+        }
+        
+        const token = checkAuth();
+        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+    </script>
+
+<header class="bg-white shadow-md">
+    <div class="max-w-6xl mx-auto p-4">
+        <div class="flex justify-between items-center">
+            <!-- Logo and Site Name -->
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-ad text-blue-600 text-2xl"></i>
+                <span class="font-bold text-xl text-gray-800">AdsPlatform</span>
+            </div>
+            
+       
+            
+            <!-- User Actions -->
+            <div class="flex items-center space-x-4">
+                <button onclick="window.location.href='post.html'" class=" md:block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    Post Ad
+                </button>
+                
+                <div class="relative">
+                    <div class="flex items-center space-x-1 text-gray-700 hover:text-blue-600">
+                        <i class="fas fa-user-circle text-xl"></i>
+                        <span id="username-display" class="hidden md:inline">Account</span>
+                    </div>
+                </div>
+                
+                <button onclick="handleLogout()" class="text-gray-600 hover:text-red-600 transition" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="hidden md:inline ml-1">Logout</span>
+                </button>
+                
+
+            </div>
+        </div>
+        
+
+    </div>
+</header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Welcome Banner -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 mb-8 text-white shadow-lg">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">Analytics Dashboard</h1>
+                    <p class="mt-1 opacity-90">Track and optimize your ad performance</p>
+                </div>
+                <button onclick="fetchUserAds()" class="bg-white hover:bg-gray-100 text-blue-700 px-4 py-2 rounded-lg flex items-center transition shadow-md">
+                    <i class="fas fa-sync-alt mr-2"></i> Refresh Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 stats-card">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-ad text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Total Ads</p>
+                        <div class="flex items-end">
+                            <h3 id="total-ads-count" class="text-2xl font-bold mr-2">-</h3>
+                            <span id="ads-trend" class="text-xs font-medium text-green-600 mb-1">
+                                <!-- Trend indicator will be added by JS -->
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 stats-card">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-thumbs-up text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Total Likes</p>
+                        <div class="flex items-end">
+                            <h3 id="total-likes" class="text-2xl font-bold mr-2">-</h3>
+                            <span id="likes-trend" class="text-xs font-medium text-green-600 mb-1">
+                                <!-- Trend indicator will be added by JS -->
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <div class="flex justify-between items-center">
+                        <p class="text-xs text-gray-500">Avg. Likes per Ad</p>
+                        <p id="avg-likes" class="text-sm font-semibold">-</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 stats-card">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-eye text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Total Views</p>
+                        <div class="flex items-end">
+                            <h3 id="total-clicks" class="text-2xl font-bold mr-2">-</h3>
+                            <span id="views-trend" class="text-xs font-medium text-green-600 mb-1">
+                                <!-- Trend indicator will be added by JS -->
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <div class="flex justify-between items-center">
+                        <p class="text-xs text-gray-500">Engagement Rate</p>
+                        <p id="engagement-rate" class="text-sm font-semibold">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Performance Chart -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold">Performance Overview</h2>
+                    <div class="inline-flex rounded-md shadow-sm" role="group">
+                        <button id="view-week" class="px-4 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-l-lg hover:bg-blue-50">Week</button>
+                        <button id="view-month" class="px-4 py-2 text-sm font-medium text-blue-700 bg-white border-t border-b border-blue-300 hover:bg-blue-50">Month</button>
+                        <button id="view-all" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-r-lg">All</button>
+                    </div>
+                </div>
+                <div class="h-72">
+                    <canvas id="performance-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Top Performing Ads -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="text-lg font-semibold mb-4">Top Performing Ads</h2>
+                <div id="top-ads" class="space-y-4">
+                    <div class="shimmer h-16 rounded-lg"></div>
+                    <div class="shimmer h-16 rounded-lg"></div>
+                    <div class="shimmer h-16 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Ads Performance -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-semibold">Ad Performance Details</h2>
+                    <p class="text-sm text-gray-500">Detailed metrics for all your ads</p>
+                </div>
+                <a href="post.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="fas fa-plus mr-2"></i> Create New Ad
+                </a>
+            </div>
+            
+            <!-- Loading Indicator -->
+            <div id="loading-indicator" class="py-10 flex justify-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+            
+            <!-- No Ads Message -->
+            <div id="no-ads-message" class="hidden py-10 text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                    <i class="fas fa-exclamation-circle text-gray-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900">No ads found</h3>
+                <p class="mt-1 text-sm text-gray-500">You haven't posted any ads yet.</p>
+                <div class="mt-4">
+                    <a href="post.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i> Create New Ad
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Ads Table Content -->
+            <div id="ads-table" class="hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Likes</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engagement</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ads-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                    <div class="flex items-center text-sm text-gray-500">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <span>Click on an ad title to view more detailed analytics.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div   id="footer"></div>
+    <script>
+                fetch('footer.html')
+          .then(r => r.text())
+          .then(h => document.getElementById('footer').innerHTML = h);
+
+        fetchAds();
+    </script>
+    
+    <script>
+        let chart = null;
+        let allAdsData = [];
+        let previousStats = {
+            totalAds: 0,
+            totalLikes: 0,
+            totalClicks: 0
+        };
+
+        // Load previous stats from localStorage if available
+        try {
+            const savedStats = localStorage.getItem('previousStats');
+            if (savedStats) {
+                previousStats = JSON.parse(savedStats);
+            }
+        } catch (error) {
+            console.error("Error loading previous stats:", error);
+        }
+
+        async function fetchUserAds() {
+            try {
+                // Show loading indicator
+                document.getElementById("loading-indicator").classList.remove("hidden");
+                document.getElementById("ads-table").classList.add("hidden");
+                document.getElementById("no-ads-message").classList.add("hidden");
+                
+                // Reset shimmer effects
+                document.getElementById("top-ads").innerHTML = `
+                    <div class="shimmer h-16 rounded-lg"></div>
+                    <div class="shimmer h-16 rounded-lg"></div>
+                    <div class="shimmer h-16 rounded-lg"></div>
+                `;
+                
+                // Check auth before making API request
+                if (!token) return;
+                
+                // Get username from localStorage
+                const username = userData.username;
+                
+                if (!username) {
+                    throw new Error("Username not found. Please log in again.");
+                }
+                
+                const res = await fetch(`http://localhost:5000/user-ads/${username}`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        // Token expired or invalid
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user");
+                        window.location.href = "index.html";
+                        return;
+                    }
+                    throw new Error("Failed to fetch ads");
+                }
+                
+                const ads = await res.json();
+                allAdsData = ads;
+                
+                // Hide loading indicator
+                document.getElementById("loading-indicator").classList.add("hidden");
+                
+                if (ads.length === 0) {
+                    document.getElementById("no-ads-message").classList.remove("hidden");
+                    // Update summary stats to zero
+                    updateStatCards(0, 0, 0);
+                    return;
+                }
+                
+                // Show table
+                document.getElementById("ads-table").classList.remove("hidden");
+                
+                // Populate the table
+                populateAdsTable(ads);
+                
+                // Update the stats and charts
+                updateDashboard(ads);
+                
+                // Store current stats for trend comparison next time
+                const currentStats = {
+                    totalAds: ads.length,
+                    totalLikes: ads.reduce((sum, ad) => sum + (ad.likes || 0), 0),
+                    totalClicks: ads.reduce((sum, ad) => sum + (ad.clicks || 0), 0)
+                };
+                
+                localStorage.setItem('previousStats', JSON.stringify(currentStats));
+                
+            } catch (error) {
+                console.error("Error fetching ads:", error);
+                document.getElementById("loading-indicator").classList.add("hidden");
+                swal("Error", "Failed to load ads. Please try again later.", "error");
+            }
+        }
+        
+        function populateAdsTable(ads) {
+            const tableBody = document.getElementById("ads-table-body");
+            tableBody.innerHTML = "";
+            
+            ads.forEach(ad => {
+                // Calculate engagement rate (likes / views)
+                const engagementRate = ad.clicks > 0 ? ((ad.likes || 0) / ad.clicks * 100).toFixed(1) + "%" : "0%";
+                
+                const row = document.createElement("tr");
+                row.className = "hover:bg-gray-50 transition-colors";
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 flex-shrink-0">
+                                <img class="h-10 w-10 rounded-md object-cover" src="http://localhost:5000${ad.image}" alt="${ad.title}">
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900 hover:text-blue-600">
+                                    <a href="ad-details.html?id=${ad._id}" class="hover:underline">${ad.title}</a>
+                                </div>
+                                <div class="text-sm text-gray-500 truncate max-w-xs">${ad.description || ''}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${ad.clicks || 0}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${ad.likes || 0}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${engagementRate}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button onclick="window.location.href='ad-details.html?id=${ad._id}'" class="text-blue-600 hover:text-blue-900">
+                                <i class="fas fa-chart-line mr-1"></i> Analytics
+                            </button>
+                            <button onclick="deleteAd('${ad._id}')" class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash-alt mr-1"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function updateDashboard(ads) {
+            // Calculate total stats
+            const totalLikes = ads.reduce((sum, ad) => sum + (ad.likes || 0), 0);
+            const totalClicks = ads.reduce((sum, ad) => sum + (ad.clicks || 0), 0);
+            
+            // Update summary stats
+            updateStatCards(ads.length, totalLikes, totalClicks);
+            
+            // Update top performing ads
+            updateTopAds(ads);
+            
+            // Prepare chart data
+            updatePerformanceChart(ads);
+        }
+        
+        function updateStatCards(adsCount, likesCount, clicksCount) {
+            // Update numbers
+            document.getElementById("total-ads-count").textContent = adsCount;
+            document.getElementById("total-likes").textContent = likesCount;
+            document.getElementById("total-clicks").textContent = clicksCount;
+            
+            // Calculate and update averages
+            const avgLikes = adsCount > 0 ? (likesCount / adsCount).toFixed(1) : "0";
+            document.getElementById("avg-likes").textContent = avgLikes;
+            
+            const engagementRate = clicksCount > 0 ? ((likesCount / clicksCount) * 100).toFixed(1) + "%" : "0%";
+            document.getElementById("engagement-rate").textContent = engagementRate;
+            
+            // Add trend indicators
+            addTrendIndicator("ads-trend", adsCount, previousStats.totalAds);
+            addTrendIndicator("likes-trend", likesCount, previousStats.totalLikes);
+            addTrendIndicator("views-trend", clicksCount, previousStats.totalClicks);
+        }
+        
+        function addTrendIndicator(elementId, currentValue, previousValue) {
+            const element = document.getElementById(elementId);
+            
+            // Only show trend if previous value exists and is not zero
+            if (previousValue === 0 || previousValue === undefined) {
+                element.innerHTML = '';
+                return;
+            }
+            
+            const percentChange = ((currentValue - previousValue) / previousValue * 100).toFixed(1);
+            
+            if (percentChange > 0) {
+                element.innerHTML = `<i class="fas fa-arrow-up mr-1"></i> ${percentChange}%`;
+                element.className = "text-xs font-medium text-green-600 mb-1";
+            } else if (percentChange < 0) {
+                element.innerHTML = `<i class="fas fa-arrow-down mr-1"></i> ${Math.abs(percentChange)}%`;
+                element.className = "text-xs font-medium text-red-600 mb-1";
+            } else {
+                element.innerHTML = `<i class="fas fa-minus mr-1"></i> 0%`;
+                element.className = "text-xs font-medium text-gray-500 mb-1";
+            }
+        }
+        
+        function updateTopAds(ads) {
+            // Sort ads by engagement (likes + clicks)
+            const sortedAds = [...ads].sort((a, b) => {
+                const engagementA = (a.likes || 0) + (a.clicks || 0);
+                const engagementB = (b.likes || 0) + (b.clicks || 0);
+                return engagementB - engagementA;
+            });
+            
+            // Get top 3 (or less if fewer ads)
+            const topAds = sortedAds.slice(0, 3);
+            
+            // Update the UI
+            const topAdsElement = document.getElementById("top-ads");
+            topAdsElement.innerHTML = "";
+            
+            if (topAds.length === 0) {
+                topAdsElement.innerHTML = `
+                    <div class="text-center py-4 text-gray-500">
+                        <p>No ad data available</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            topAds.forEach((ad, index) => {
+                const totalEngagement = (ad.likes || 0) + (ad.clicks || 0);
+                const badgeColor = index === 0 ? "bg-yellow-100 text-yellow-800" : 
+                                  index === 1 ? "bg-gray-100 text-gray-800" : 
+                                  "bg-orange-100 text-orange-800";
+                
+                const adElement = document.createElement("div");
+                adElement.className = "flex items-center p-3 border border-gray-100 rounded-lg card-hover";
+                adElement.innerHTML = `
+                    <div class="mr-3 ${badgeColor} text-xs font-medium px-2 py-1 rounded">
+                        #${index + 1}
+                    </div>
+                    <div class="flex-shrink-0 h-10 w-10 mr-3">
+                        <img class="h-10 w-10 rounded object-cover" src="http://localhost:5000${ad.image}" alt="${ad.title}">
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-gray-900 truncate">${ad.title}</p>
+                        <div class="flex items-center text-xs text-gray-500 mt-1">
+                            <span class="mr-2"><i class="fas fa-eye mr-1"></i>${ad.clicks || 0}</span>
+                            <span><i class="fas fa-thumbs-up mr-1"></i>${ad.likes || 0}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="ad-details.html?id=${ad._id}" class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                `;
+                topAdsElement.appendChild(adElement);
+            });
+        }
+        
+        function updatePerformanceChart(ads) {
+            // Sort ads by created date if available
+            const sortedAds = [...ads].sort((a, b) => {
+                return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+            });
+            
+            // Prepare data for chart
+            const adNames = sortedAds.map(ad => ad.title.substring(0, 12) + (ad.title.length > 12 ? "..." : ""));
+            const likesData = sortedAds.map(ad => ad.likes || 0);
+            const clicksData = sortedAds.map(ad => ad.clicks || 0);
+            
+            // Create or update the chart
+            createChart(adNames, likesData, clicksData);
+        }
+        
+        function createChart(labels, likesData, clicksData) {
+            const ctx = document.getElementById('performance-chart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Views',
+                            data: clicksData,
+                            backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                            borderColor: 'rgba(124, 58, 237, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(124, 58, 237, 1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Likes',
+                            data: likesData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#1f2937',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            padding: 12,
+                            boxPadding: 6,
+                            cornerRadius: 8,
+                            titleFont: {
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        async function deleteAd(adId) {
+            try {
+                swal({
+                    title: "Are you sure?",
+                    text: "Once deleted, you will not be able to recover this ad!",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                }).then(async (willDelete) => {
+                    if (willDelete) {
+                        const res = await fetch(`http://localhost:5000/ads/${adId}`, {
+                            method: "DELETE",
+                            headers: {
+                                "Authorization": `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (!res.ok) {
+                            throw new Error("Failed to delete ad");
+                        }
+                        
+                        swal("Success", "Your ad has been deleted successfully!", "success");
+                        fetchUserAds();
+                    }
+                });
+            } catch (error) {
+                console.error("Error deleting ad:", error);
+                swal("Error", "Failed to delete ad. Please try again.", "error");
+            }
+        }
+
+        // Time period filters for chart
+        document.getElementById('view-week').addEventListener('click', function() {
+            filterChartData(7);
+            updateButtonStyles('view-week');
+        });
+        
+        document.getElementById('view-month').addEventListener('click', function() {
+            filterChartData(30);
+            updateButtonStyles('view-month');
+        });
+        
+        document.getElementById('view-all').addEventListener('click', function() {
+            updatePerformanceChart(allAdsData);
+            updateButtonStyles('view-all');
+        });
+        
+        function updateButtonStyles(activeButtonId) {
+            const buttons = ['view-week', 'view-month', 'view-all'];
+            buttons.forEach(id => {
+                const button = document.getElementById(id);
+                if (id === activeButtonId) {
+                    button.className = "px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600";
+                } else {
+                    button.className = "px-4 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-300 hover:bg-blue-50";
+                }
+            });
+        }
+        
+        function filterChartData(days) {
+            if (!allAdsData || allAdsData.length === 0) return;
+            
+            const now = new Date();
+            const cutoffDate = new Date();
+            cutoffDate.setDate(now.getDate() - days);
+            
+            const filteredAds = allAdsData.filter(ad => {
+                // If no createdAt, assume it's recent for demo purposes
+                const adDate = ad.createdAt ? new Date(ad.createdAt) : now;
+                return adDate >= cutoffDate;
+            });
+            
+            if (filteredAds.length === 0) {
+                // No ads in this time period
+                swal("No Data", `You don't have any ads in the last ${days} days.`, "info");
+                return;
+            }
+            
+            updatePerformanceChart(filteredAds);
+        }
+
+// Handle page initialization
+document.addEventListener('DOMContentLoaded', function() {
+            // Initialize dashboard with user's ads
+            fetchUserAds();
+            
+            // Set up event listeners for UI interactions
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            // This function could be expanded with more event listeners as needed
+            document.getElementById('view-week').addEventListener('click', function() {
+                filterChartData(7);
+                updateButtonStyles('view-week');
+            });
+            
+            document.getElementById('view-month').addEventListener('click', function() {
+                filterChartData(30);
+                updateButtonStyles('view-month');
+            });
+            
+            document.getElementById('view-all').addEventListener('click', function() {
+                updatePerformanceChart(allAdsData);
+                updateButtonStyles('view-all');
+            });
+        }
+        
+        // Export functionality for reports
+        function exportDashboardData() {
+            if (!allAdsData || allAdsData.length === 0) {
+                swal("No Data", "You don't have any ads to export.", "info");
+                return;
+            }
+            
+            // Format data for export
+            const exportData = allAdsData.map(ad => {
+                return {
+                    title: ad.title,
+                    description: ad.description || '',
+                    views: ad.clicks || 0,
+                    likes: ad.likes || 0,
+                    engagement: ad.clicks > 0 ? ((ad.likes || 0) / ad.clicks * 100).toFixed(1) + "%" : "0%",
+                    created: ad.createdAt ? new Date(ad.createdAt).toLocaleDateString() : 'Unknown'
+                };
+            });
+            
+            // Convert to CSV or JSON
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            
+            // Create download link
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "ad_analytics_export.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+        
+        // Add export button to UI
+        function addExportButton() {
+            const dashboardHeader = document.querySelector('.header');
+            if (dashboardHeader) {
+                const exportButton = document.createElement('button');
+                exportButton.className = "ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition shadow-md";
+                exportButton.innerHTML = '<i class="fas fa-download mr-2"></i> Export Data';
+                exportButton.addEventListener('click', exportDashboardData);
+                
+                // Find a suitable place to add the button in the header
+                const buttonContainer = dashboardHeader.querySelector('.flex') || dashboardHeader;
+                buttonContainer.appendChild(exportButton);
+            }
+        }
+        
+        // Handle logout functionality
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            localStorage.removeItem("previousStats");
+            window.location.href = "index.html";
+        }
+        
+        // Function to handle ad sharing
+        function shareAd(adId) {
+            const ad = allAdsData.find(ad => ad._id === adId);
+            if (!ad) return;
+            
+            // Create share URL
+            const shareUrl = `${window.location.origin}/view-ad.html?id=${adId}`;
+            
+            // Create share dialog
+            swal({
+                title: "Share Your Ad",
+                text: "Copy the link below to share your ad:",
+                content: {
+                    element: "input",
+                    attributes: {
+                        placeholder: "Share URL",
+                        value: shareUrl,
+                        type: "text"
+                    }
+                },
+                buttons: {
+                    copy: {
+                        text: "Copy Link",
+                        value: "copy",
+                    },
+                    cancel: "Cancel"
+                }
+            }).then((value) => {
+                if (value === "copy") {
+                    // Copy link to clipboard
+                    const input = document.querySelector(".swal-content input");
+                    input.select();
+                    document.execCommand("copy");
+                    swal("Copied!", "Share link copied to clipboard", "success");
+                }
+            });
+        }
+        
+        // Function to display ad performance details
+        function viewAdDetails(adId) {
+            window.location.href = `ad-details.html?id=${adId}`;
+        }
+        
+        // Function to refresh data periodically
+        function setupAutoRefresh() {
+            // Refresh data every 5 minutes
+            setInterval(fetchUserAds, 5 * 60 * 1000);
+        }
+        
+        // Function to show notifications for new engagement
+        function checkNewEngagement() {
+            // This would typically involve comparing current data with previous data
+            // and showing notifications for significant changes
+            
+            // For now, we'll just check if there are any ads with engagement above threshold
+            const highEngagementAds = allAdsData.filter(ad => {
+                const engagementRate = ad.clicks > 0 ? ((ad.likes || 0) / ad.clicks * 100) : 0;
+                return engagementRate > 50; // 50% engagement rate threshold
+            });
+            
+            if (highEngagementAds.length > 0) {
+                const topAd = highEngagementAds[0];
+                
+                // Show notification
+                const notification = document.createElement('div');
+                notification.className = "fixed bottom-4 right-4 bg-white shadow-lg rounded-lg p-4 border-l-4 border-green-500 max-w-md animate-slideInRight";
+                notification.innerHTML = `
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-chart-line text-green-500 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-gray-900">High Engagement Alert!</h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                Your ad "${topAd.title}" is performing exceptionally well with high engagement.
+                            </p>
+                            <div class="mt-2">
+                                <button onclick="viewAdDetails('${topAd._id}')" class="text-sm text-blue-600 hover:text-blue-800">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-shrink-0 flex">
+                            <button onclick="this.parentElement.parentElement.parentElement.remove()" class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Remove notification after 10 seconds
+                setTimeout(() => {
+                    notification.classList.add('animate-fadeOut');
+                    setTimeout(() => notification.remove(), 500);
+                }, 10000);
+            }
+        }
+        
+        // Add some animations for the dashboard
+        function addAnimations() {
+            // Add keyframes for animations
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @keyframes slideInRight {
+                    0% { transform: translateX(100%); opacity: 0; }
+                    100% { transform: translateX(0); opacity: 1; }
+                }
+                
+                @keyframes fadeOut {
+                    0% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+                
+                .animate-slideInRight {
+                    animation: slideInRight 0.5s forwards;
+                }
+                
+                .animate-fadeOut {
+                    animation: fadeOut 0.5s forwards;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Initialize the dashboard with all features
+        function initializeDashboard() {
+            fetchUserAds();
+            setupEventListeners();
+            setupAutoRefresh();
+            addAnimations();
+            
+            // Check for new engagement every 2 minutes
+            setInterval(checkNewEngagement, 2 * 60 * 1000);
+            
+            // Add export button after header is loaded
+            setTimeout(addExportButton, 1000);
+        }
+        
+        // Start the dashboard
+        initializeDashboard();
+    </script>
+</body>
+</html>
