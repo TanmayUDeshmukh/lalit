@@ -102,6 +102,15 @@
         </div>
     </div>
 
+    <div id="footer"></div>
+    <script>
+        fetch('footer.html')
+            .then(r => r.text())
+            .then(h => document.getElementById('footer').innerHTML = h);
+
+        fetchAds();
+    </script>
+    
  
     <script>
         // Auth state management
