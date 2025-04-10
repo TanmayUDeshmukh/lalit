@@ -68,20 +68,13 @@
     }
 
     // Logout function
-    function setupLogout() {
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                localStorage.removeItem('token');
-                window.location.href = 'index.html';
-            });
-        }
-    }
-
-    // Add event listener after header is loaded
-    window.addEventListener('load', () => {
-        setTimeout(setupLogout, 500); // Give time for header to load
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.href = 'index.html';
     });
+
+
+    const imageUrl = ad.image.startsWith('http') ? ad.image : `https://lalit-backend.onrender.com${ad.image}`;
 
     // Fetch and display ad details
     async function fetchAdDetails() {
@@ -94,21 +87,16 @@
                 return;
             }
 
-            // Update with your actual backend URL
-            const backendUrl = "http://localhost:5000";
-            const res = await fetch(`${backendUrl}/ads`);
+            const res = await fetch("https://lalit-backend.onrender.com/ads");
             const ads = await res.json();
             const ad = ads.find(a => a._id === adId);
         
             if (ad) {
-                // Use the image URL directly from the ad object without prepending the backend URL
-                // Cloudinary URLs are already complete URLs
                 document.getElementById("ad-details").innerHTML = `
                     <div class="relative">
-                        <img src="${ad.image}" 
+                        <img src="https://lalit-backend.onrender.com${imageUrl}" 
                             class="w-full h-64 sm:h-80 object-cover" 
-                            alt="${ad.title}"
-                            onerror="this.src='https://via.placeholder.com/800x400?text=Image+Not+Available'">
+                            alt="${ad.title}">
                         <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                             <h2 class="text-white text-2xl font-bold">${ad.title}</h2>
                         </div>
@@ -134,33 +122,12 @@
                         </div>
                         
                         <div class="mt-6 flex justify-end">
-                            <button id="click-ad-btn" data-id="${ad._id}" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition duration-200">
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition duration-200">
                                 <i class="fas fa-external-link-alt mr-1"></i> Visit Ad
                             </button>
                         </div>
                     </div>
                 `;
-
-                // Add click event for tracking ad clicks
-                document.getElementById("click-ad-btn").addEventListener("click", async (e) => {
-                    const adId = e.currentTarget.getAttribute("data-id");
-                    try {
-                        await fetch(`${backendUrl}/click-ad`, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Authorization": `Bearer ${localStorage.getItem("token")}`
-                            },
-                            body: JSON.stringify({ adId })
-                        });
-                        // Increment click count in UI
-                        const clicksEl = e.currentTarget.closest(".p-6").querySelector(".fa-mouse-pointer").nextSibling;
-                        const clicks = parseInt(clicksEl.nodeValue.trim()) + 1;
-                        clicksEl.nodeValue = ` ${clicks}`;
-                    } catch (err) {
-                        console.error("Error recording click:", err);
-                    }
-                });
             } else {
                 showError("Ad not found");
             }
