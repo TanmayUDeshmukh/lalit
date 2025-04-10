@@ -28,7 +28,7 @@
         const username = localStorage.getItem("username");
 
         async function fetchUserAds() {
-            const res = await fetch(`http://localhost:5000/user-ads/${username}`);
+            const res = await fetch(`https://lalit-backend.onrender.com/user-ads/${username}`);
             const ads = await res.json();
             const adsContainer = document.getElementById("ads-container");
 

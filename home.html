@@ -155,7 +155,7 @@
                 // Check auth before making API request
                 if (!checkAuth()) return;
                 
-                const res = await fetch("http://localhost:5000/ads", {
+                const res = await fetch("https://lalit-backend.onrender.com/ads", {
                     headers: {
                         "Authorization": `Bearer ${token}`
                     }
@@ -211,7 +211,7 @@
     adCard.onclick = async () => {
         try {
             // Send a request to update the click count
-            await fetch("http://localhost:5000/click-ad", {
+            await fetch("https://lalit-backend.onrender.com/click-ad", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ adId: ad._id })
@@ -226,7 +226,7 @@
 
     adCard.innerHTML = `
         <div class="relative">
-            <img src="http://localhost:5000${ad.image}" class="w-full h-40 object-cover rounded-lg" alt="${ad.title}">
+            <img src="https://lalit-backend.onrender.com${ad.image}" class="w-full h-40 object-cover rounded-lg" alt="${ad.title}">
             <span class="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs">
                 <i class="fas fa-eye mr-1"></i>${ad.clicks || 0}
             </span>
@@ -255,7 +255,7 @@
 
         async function viewAd(adId) {
             try {
-                await fetch("http://localhost:5000/click-ad", {
+                await fetch("https://lalit-backend.onrender.com/click-ad", {
                     method: "POST",
                     headers: { 
                         "Content-Type": "application/json",
@@ -271,7 +271,7 @@
 
         async function likeAd(adId) {
             try {
-                const res = await fetch("http://localhost:5000/like-ad", {
+                const res = await fetch("https://lalit-backend.onrender.com/like-ad", {
                     method: "POST",
                     headers: { 
                         "Content-Type": "application/json",

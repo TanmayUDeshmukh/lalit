@@ -84,14 +84,14 @@
                 return;
             }
 
-            const res = await fetch("http://localhost:5000/ads");
+            const res = await fetch("https://lalit-backend.onrender.com/ads");
             const ads = await res.json();
             const ad = ads.find(a => a._id === adId);
         
             if (ad) {
                 document.getElementById("ad-details").innerHTML = `
                     <div class="relative">
-                        <img src="http://localhost:5000${ad.image}" 
+                        <img src="https://lalit-backend.onrender.com${ad.image}" 
                             class="w-full h-64 sm:h-80 object-cover" 
                             alt="${ad.title}">
                         <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">

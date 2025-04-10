@@ -305,7 +305,7 @@
                     throw new Error("Username not found. Please log in again.");
                 }
                 
-                const res = await fetch(`http://localhost:5000/user-ads/${username}`, {
+                const res = await fetch(`https://lalit-backend.onrender.com/user-ads/${username}`, {
                     headers: {
                         "Authorization": `Bearer ${token}`
                     }
@@ -374,7 +374,7 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="h-10 w-10 flex-shrink-0">
-                                <img class="h-10 w-10 rounded-md object-cover" src="http://localhost:5000${ad.image}" alt="${ad.title}">
+                                <img class="h-10 w-10 rounded-md object-cover" src="https://lalit-backend.onrender.com${ad.image}" alt="${ad.title}">
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900 hover:text-blue-600">
@@ -502,7 +502,7 @@
                         #${index + 1}
                     </div>
                     <div class="flex-shrink-0 h-10 w-10 mr-3">
-                        <img class="h-10 w-10 rounded object-cover" src="http://localhost:5000${ad.image}" alt="${ad.title}">
+                        <img class="h-10 w-10 rounded object-cover" src="https://lalit-backend.onrender.com${ad.image}" alt="${ad.title}">
                     </div>
                     <div class="min-w-0 flex-1">
                         <p class="text-sm font-medium text-gray-900 truncate">${ad.title}</p>
@@ -620,7 +620,7 @@
                     dangerMode: true,
                 }).then(async (willDelete) => {
                     if (willDelete) {
-                        const res = await fetch(`http://localhost:5000/ads/${adId}`, {
+                        const res = await fetch(`https://lalit-backend.onrender.com/ads/${adId}`, {
                             method: "DELETE",
                             headers: {
                                 "Authorization": `Bearer ${token}`

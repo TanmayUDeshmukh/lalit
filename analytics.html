@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fetch user's ads data
         async function fetchUserAds() {
             try {
-                const response = await fetch(`http://localhost:5000/user-ads/${username}`);
+                const response = await fetch(`https://lalit-backend.onrender.com/user-ads/${username}`);
                 if (!response.ok) {
                     throw new Error("Failed to fetch user ads");
                 }
