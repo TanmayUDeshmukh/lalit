@@ -68,13 +68,16 @@
     }
 
     // Logout function
-    document.getElementById('logout-btn').addEventListener('click', () => {
-        localStorage.removeItem('token');
-        window.location.href = 'index.html';
+    // Add event listener only if the element exists
+    document.addEventListener('DOMContentLoaded', () => {
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('token');
+                window.location.href = 'index.html';
+            });
+        }
     });
-
-
-    const imageUrl = ad.image.startsWith('http') ? ad.image : `https://lalit-backend.onrender.com${ad.image}`;
 
     // Fetch and display ad details
     async function fetchAdDetails() {
@@ -92,11 +95,15 @@
             const ad = ads.find(a => a._id === adId);
         
             if (ad) {
+                // Determine image URL based on whether it's a Cloudinary URL or local path
+                const imageUrl = ad.image.startsWith('http') ? ad.image : `https://lalit-backend.onrender.com${ad.image}`;
+                
                 document.getElementById("ad-details").innerHTML = `
                     <div class="relative">
-                        <img src="https://lalit-backend.onrender.com${imageUrl}" 
+                        <img src="${imageUrl}" 
                             class="w-full h-64 sm:h-80 object-cover" 
-                            alt="${ad.title}">
+                            alt="${ad.title}"
+                            onerror="this.src='https://via.placeholder.com/800x400?text=Image+Not+Found'">
                         <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                             <h2 class="text-white text-2xl font-bold">${ad.title}</h2>
                         </div>
@@ -118,7 +125,7 @@
                         
                         <div class="border-t border-gray-100 pt-4">
                             <h3 class="text-lg font-semibold mb-2">Description</h3>
-                            <p class="text-gray-700 whitespace-pre-line">${ad.description}</p>
+                            <p class="text-gray-700 whitespace-pre-line">${ad.description || 'No description provided'}</p>
                         </div>
                         
                         <div class="mt-6 flex justify-end">
