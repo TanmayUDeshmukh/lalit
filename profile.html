@@ -110,7 +110,7 @@
 
         fetchAds();
     </script>
-    
+
  
     <script>
         // Auth state management
@@ -133,10 +133,13 @@
                 // Update nav auth buttons
                 const navAuth = document.getElementById("navAuth");
                 navAuth.innerHTML = `
-                    <span class="mr-3 text-gray-600">Welcome, ${userData.username || 'User'}</span>
-                    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors">
-                        <i class="fas fa-sign-out-alt mr-1"></i> Logout
+
+                                    <div class="flex items-center space-x-4">
+                    <button id="logoutBtn" class="text-gray-600 hover:text-red-600 transition" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="hidden md:inline ml-1">Logout</span>
                     </button>
+                </div>
                 `;
                 document.getElementById("logoutBtn").addEventListener("click", handleLogout);
                 
