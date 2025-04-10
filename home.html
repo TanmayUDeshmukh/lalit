@@ -35,31 +35,14 @@
                     <span class="font-bold text-xl text-gray-800">AdsPlatform</span>
                 </div></a>
                 
-           
-                
                 <!-- User Actions -->
                 <div class="flex items-center space-x-4">
-                    <!-- <button onclick="window.location.href='post.html'" class=" md:block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                        Post Ad
-                    </button> -->
-                    
-                    <!-- <div class="relative">
-                        <div class="flex items-center space-x-1 text-gray-700 hover:text-blue-600">
-                            <i class="fas fa-user-circle text-xl"></i>
-                            <span id="username-display" class="hidden md:inline">Account</span>
-                        </div>
-                    </div> -->
-                    
                     <button onclick="handleLogout()" class="text-gray-600 hover:text-red-600 transition" title="Logout">
                         <i class="fas fa-sign-out-alt"></i>
                         <span class="hidden md:inline ml-1">Logout</span>
                     </button>
-                    
-   
                 </div>
             </div>
-            
- 
         </div>
     </header>
 
@@ -96,11 +79,11 @@
 
     </div>
 
-    <div   id="footer"></div>
+    <div id="footer"></div>
     <script>
-                fetch('footer.html')
-          .then(r => r.text())
-          .then(h => document.getElementById('footer').innerHTML = h);
+        fetch('footer.html')
+            .then(r => r.text())
+            .then(h => document.getElementById('footer').innerHTML = h);
 
         fetchAds();
     </script>
@@ -110,7 +93,7 @@
         const userData = JSON.parse(localStorage.getItem("user") || "{}");
         
         // Update username display if available
-        if (userData.username) {
+        if (userData.username && document.getElementById("username-display")) {
             document.getElementById("username-display").textContent = userData.username;
         }
         
@@ -130,8 +113,6 @@
                 }
             });
         }
-        
- 
         
         // Function to search ads
         function searchAds() {
@@ -204,46 +185,49 @@
                 }
                 
                 filteredAds.forEach(ad => {
-    const adCard = document.createElement('div');
-    adCard.className = "bg-white p-4 rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer";
+                    const adCard = document.createElement('div');
+                    adCard.className = "bg-white p-4 rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer";
 
-    // Function to handle ad clicks
-    adCard.onclick = async () => {
-        try {
-            // Send a request to update the click count
-            await fetch("https://lalit-backend.onrender.com/click-ad", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ adId: ad._id })
-            });
+                    // Function to handle ad clicks
+                    adCard.onclick = async () => {
+                        try {
+                            // Send a request to update the click count
+                            await fetch("https://lalit-backend.onrender.com/click-ad", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ adId: ad._id })
+                            });
 
-            // Redirect to the details page after updating clicks
-            window.location.href = `ad-details.html?id=${ad._id}`;
-        } catch (error) {
-            console.error("Error updating ad clicks:", error);
-        }
-    };
+                            // Redirect to the details page after updating clicks
+                            window.location.href = `ad-details.html?id=${ad._id}`;
+                        } catch (error) {
+                            console.error("Error updating ad clicks:", error);
+                        }
+                    };
 
-    adCard.innerHTML = `
-        <div class="relative">
-            <img src="https://lalit-backend.onrender.com${ad.image}" class="w-full h-40 object-cover rounded-lg" alt="${ad.title}">
-            <span class="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs">
-                <i class="fas fa-eye mr-1"></i>${ad.clicks || 0}
-            </span>
-        </div>
-        <h3 class="font-bold text-lg mt-3 truncate">${ad.title}</h3>
-        <p class="text-sm text-gray-600 flex items-center">
-            <i class="fas fa-user mr-1 text-gray-400"></i> ${ad.uploader || 'Anonymous'}
-        </p>
-        <div class="flex justify-between items-center mt-3">
-            <button onclick="event.stopPropagation(); likeAd('${ad._id}')" class="flex items-center text-gray-600 hover:text-blue-600 transition">
-                <i class="fas fa-thumbs-up mr-1"></i> ${ad.likes || 0}
-            </button>
-        </div>
-    `;
+                    // For Cloudinary URLs, use the complete URL directly without prepending backend URL
+                    const imageUrl = ad.image.startsWith('http') ? ad.image : `https://lalit-backend.onrender.com${ad.image}`;
 
-    adsContainer.appendChild(adCard);
-});
+                    adCard.innerHTML = `
+                        <div class="relative">
+                            <img src="${imageUrl}" class="w-full h-40 object-cover rounded-lg" alt="${ad.title}" onerror="this.src='https://via.placeholder.com/400x300?text=Image+Not+Found'">
+                            <span class="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs">
+                                <i class="fas fa-eye mr-1"></i>${ad.clicks || 0}
+                            </span>
+                        </div>
+                        <h3 class="font-bold text-lg mt-3 truncate">${ad.title}</h3>
+                        <p class="text-sm text-gray-600 flex items-center">
+                            <i class="fas fa-user mr-1 text-gray-400"></i> ${ad.uploader || 'Anonymous'}
+                        </p>
+                        <div class="flex justify-between items-center mt-3">
+                            <button onclick="event.stopPropagation(); likeAd('${ad._id}')" class="flex items-center text-gray-600 hover:text-blue-600 transition">
+                                <i class="fas fa-thumbs-up mr-1"></i> ${ad.likes || 0}
+                            </button>
+                        </div>
+                    `;
+
+                    adsContainer.appendChild(adCard);
+                });
 
             } catch (error) {
                 console.error("Error fetching ads:", error);
